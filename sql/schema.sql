@@ -10,6 +10,10 @@
 
 -- Example: the shared course tables, as a team would write them.
 
+SET ROLE dasher_write;
+
+SET search_path = dasher, course, public;
+
 -- Row unit: one weather station.
 CREATE TABLE stations (
   station_id TEXT PRIMARY KEY,
