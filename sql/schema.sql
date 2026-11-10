@@ -67,7 +67,7 @@ CREATE TABLE event_type (
 
 -- Row unit: one calendar year. BLS CPI-U, all items, U.S. city average,
 -- annual average, 1982-84 = 100. Joined to storm_event on begin_year (no foreign key:
--- a new year's events arrive before that year's annual average exists).
+-- a new year's events arrive before that year's annual average exists).x
 CREATE TABLE cpi_annual (
   year  INTEGER PRIMARY KEY CHECK (year BETWEEN 1990 AND 2100),
   cpi_u NUMERIC(8, 3) NOT NULL CHECK (cpi_u > 0)
@@ -111,6 +111,27 @@ INSERT INTO state (state_fips, state_abbr, state_name) VALUES
   ('50', 'VT', 'Vermont'),        ('51', 'VA', 'Virginia'),       ('53', 'WA', 'Washington'),
   ('54', 'WV', 'West Virginia'),  ('55', 'WI', 'Wisconsin'),      ('56', 'WY', 'Wyoming')
 ON CONFLICT DO NOTHING;
+
+
+-- adding the billion $ storm events table
+-- i think this along with sam's above created tables are sufficient for the third question
+-- Row unit: one NOAA billion-dollar disaster.
+CREATE TABLE billion_dollar_disasters (
+  disaster_id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  disaster_name TEXT NOT NULL, -- I imagine a bil-$ disaster will be named
+  disaster_type TEXT NOT NULL,
+  begin_date DATE NOT NULL CHECK (begin_date >= DATE '1996-01-01'),  -- all event types recorded from 1996
+  end_date DATE, 
+  begin_year INTEGER GENERATED ALWAYS AS (EXTRACT(YEAR FROM begin_date)::INTEGER) STORED,
+  decade INTEGER GENERATED ALWAYS AS ((EXTRACT(YEAR FROM begin_date)::INTEGER / 10) * 10) STORED,
+  estimated_damage_usd NUMERIC CHECK (estimated_damage_usd >= 0),
+  states_impacted TEXT NOT NULL, 
+  ingestion_run_id BIGINT REFERENCES ingestion_runs (run_id)
+);
+
+-- group by decade
+CREATE INDEX billion_dollar_disaster_decade on billion_dollar_disasters(decade)
+
 
 
 -- CHECKS THAT EVERYTHING ABOVE WORKED
