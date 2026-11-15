@@ -18,3 +18,7 @@ data/raw/
 # Quarto build folders (commit the rendered, self-contained HTML instead)
 .quarto/
 *_files/
+
+scratch.sql
+check_schema.sql
+
