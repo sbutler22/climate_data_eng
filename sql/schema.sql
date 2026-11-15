@@ -53,7 +53,8 @@ CREATE TABLE ingestion_runs (
 CREATE TABLE state (
   state_fips CHAR(2) PRIMARY KEY CHECK (state_fips ~ '^[0-9]{2}$'),
   state_abbr CHAR(2) NOT NULL UNIQUE CHECK (state_abbr ~ '^[A-Z]{2}$'),
-  state_name TEXT NOT NULL
+  state_name TEXT NOT NULL,
+  census_region TEXT CHECK (census_region IN ('Northeast', 'Midwest', 'South', 'West'))
 );
 
 -- Row unit: one NOAA Storm Events event-type name.
@@ -111,6 +112,19 @@ INSERT INTO state (state_fips, state_abbr, state_name) VALUES
   ('50', 'VT', 'Vermont'),        ('51', 'VA', 'Virginia'),       ('53', 'WA', 'Washington'),
   ('54', 'WV', 'West Virginia'),  ('55', 'WI', 'Wisconsin'),      ('56', 'WY', 'Wyoming')
 ON CONFLICT DO NOTHING;
+
+-- Census region for each state, used to group states for Q2 (seasonal hail by region).
+
+UPDATE state SET census_region = CASE
+  WHEN state_abbr IN ('CT','ME','MA','NH','RI','VT','NJ','NY','PA') THEN 'Northeast'
+  WHEN state_abbr IN ('IL','IN','MI','OH','WI','IA','KS','MN','MO','NE','ND','SD') THEN 'Midwest'
+  WHEN state_abbr IN ('DE','DC','FL','GA','MD','NC','SC','VA','WV',
+                      'AL','KY','MS','TN','AR','LA','OK','TX') THEN 'South'
+  WHEN state_abbr IN ('AZ','CO','ID','MT','NV','NM','UT','WY',
+                      'AK','CA','HI','OR','WA') THEN 'West'
+END;
+
+ALTER TABLE state ALTER COLUMN census_region SET NOT NULL;
 
 
 -- adding the billion $ storm events table
